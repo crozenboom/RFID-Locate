@@ -1,24 +1,30 @@
 import pandas as pd
 
 # Load data from CSV
-file_path = input("file path: ")
-file_path = file_path.strip('"')
-file_path = file_path.replace("\\", "/")
+file_path = input("file path: ").strip('"').replace("\\", "/")
 df = pd.read_csv(file_path, skiprows=2)
 
 # Remove leading/trailing spaces from column names
 df.columns = df.columns.str.strip()
 
-# Display columns to check if RSSI is present
+# Display columns to check if required ones are present
 print("Columns found in CSV:", df.columns.tolist())
 
-# Ensure 'Antenna' and 'RSSI' columns exist
-if 'Antenna' not in df.columns or 'RSSI' not in df.columns:
-    print("Error: Missing required columns in CSV file.")
+# Ensure required columns exist
+required_columns = {'EPC', 'Antenna', 'RSSI'}
+if not required_columns.issubset(df.columns):
+    print("Error: Missing one or more required columns in CSV file.")
 else:
-    # Group by 'Antenna' and calculate the mean of 'RSSI'
-    avg_rssi = df.groupby('Antenna')['RSSI'].mean().reset_index()
+    # Filter for a specific EPC
+    target_epc = "300833B2DDD9014000000000"
+    df_filtered = df[df['EPC'] == target_epc]
 
-    # Print average RSSI per antenna
-    print("Average RSSI per antenna:")
-    print(avg_rssi)
+    if df_filtered.empty:
+        print(f"No data found for EPC: {target_epc}")
+    else:
+        # Group by 'Antenna' and calculate mean RSSI
+        avg_rssi = df_filtered.groupby('Antenna')['RSSI'].mean().reset_index()
+
+        # Print results
+        print(f"Average RSSI per antenna for EPC {target_epc}:")
+        print(avg_rssi)
